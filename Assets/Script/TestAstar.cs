@@ -21,30 +21,33 @@ public class TestAstar : MonoBehaviour
     private int count2;
     private Tile currentParentsNode;
     private Tile endTile;
-    
+
+    private int checkCount3;
+    private int checkCount4;
+
     List<Tile> tileList;
     List<Tile> openList;
     List<Tile> closeList;
-       
+
     private void Awake()
     {
         this.btn2.onClick.AddListener(() =>
         {
-            foreach(var node in this.openList) //현재 오픈리스트 확인.
+            foreach (var node in this.openList) //현재 오픈리스트 확인.
             {
                 print($"{node.pos.x},{node.pos.y}");
             }
         });
 
         this.btn.onClick.AddListener(() =>
-        {           
+        {
             this.NextStage();
         });
     }
 
     public void NextStage()
     {
-        
+
         var sortList = this.openList.OrderBy(x => x.F);
         List<Tile> tempList = new List<Tile>();
         foreach (var node in sortList)
@@ -64,10 +67,10 @@ public class TestAstar : MonoBehaviour
         this.currentParentsNode = firstValue;
         this.TileColorReset();
         this.currentParentsNode.GetComponent<SpriteRenderer>().color = Color.green;
-        for (int i=0;i<this.openList.Count;i++)
+        for (int i = 0; i < this.openList.Count; i++)
         {
             if (this.openList[i] == this.currentParentsNode)
-            {                
+            {
                 this.closeList.Add(this.openList[i]);
                 this.openList.RemoveAt(i);
                 break;
@@ -90,30 +93,87 @@ public class TestAstar : MonoBehaviour
         this.CheckNode();
     }
 
-    public void CheckNode()
+    public void CheckNode() //방향으로 인접한블록체크
     {
-        foreach (var tile in this.tileList)
+        //foreach (var tile in this.tileList)    //8방향
+        //{
+        //    for (int i = -1; i <= 1; i++)
+        //    {
+        //        for (int j = 1; j >= -1; j--)
+        //        {
+        //            if (tile.pos == this.currentParentsNode.pos - new Vector2(j, i))
+        //            {
+        //                if (this.currentParentsNode.pos == tile.pos || tile.type == 3 || tile.type == 1)
+        //                {
+        //                    this.closeList.Add(tile);
+        //                }
+        //                else
+        //                {
+        //                    if(tile.type!=1 && tile.type != 5)
+        //                    this.openList.Add(tile);
+        //                }
+        //                tile.parents = this.currentParentsNode;
+        //            }
+        //        }
+        //    }
+
+        foreach (var node in this.tileList)   //4방향
         {
-            for (int i = -1; i <= 1; i++)
+            if (node.pos == this.currentParentsNode.pos - new Vector2(-1, 0))
             {
-                for (int j = 1; j >= -1; j--)
+                if (this.currentParentsNode.pos == node.pos || node.type == 3 || node.type == 1)
                 {
-                    if (tile.pos == this.currentParentsNode.pos - new Vector2(j, i))
-                    {
-                        if (this.currentParentsNode.pos == tile.pos || tile.type == 3 || tile.type == 1)
-                        {
-                            this.closeList.Add(tile);
-                        }
-                        else
-                        {
-                            if(tile.type!=1 && tile.type != 5)
-                            this.openList.Add(tile);
-                        }
-                        tile.parents = this.currentParentsNode;
-                    }
+                    this.closeList.Add(node);
                 }
+                else
+                {
+                    if (node.type != 1 && node.type != 5)
+                        this.openList.Add(node);
+                }
+                node.parents = this.currentParentsNode;
+            }
+            else if (node.pos == this.currentParentsNode.pos - new Vector2(0, -1))
+            {
+                if (this.currentParentsNode.pos == node.pos || node.type == 3 || node.type == 1)
+                {
+                    this.closeList.Add(node);
+                }
+                else
+                {
+                    if (node.type != 1 && node.type != 5)
+                        this.openList.Add(node);
+                }
+                node.parents = this.currentParentsNode;
+            }
+            else if (node.pos == this.currentParentsNode.pos - new Vector2(0, 1))
+            {
+                if (this.currentParentsNode.pos == node.pos || node.type == 3 || node.type == 1)
+                {
+                    this.closeList.Add(node);
+                }
+                else
+                {
+                    if (node.type != 1 && node.type != 5)
+                        this.openList.Add(node);
+                }
+                node.parents = this.currentParentsNode;
+            }
+            else if (node.pos == this.currentParentsNode.pos - new Vector2(1, 0))
+            {
+                if (this.currentParentsNode.pos == node.pos || node.type == 3 || node.type == 1)
+                {
+                    this.closeList.Add(node);
+                }
+                else
+                {
+                    if (node.type != 1 && node.type != 5)
+                        this.openList.Add(node);
+                }
+                node.parents = this.currentParentsNode;
             }
         }
+    
+
 
         foreach (var tile in this.openList)
         {
