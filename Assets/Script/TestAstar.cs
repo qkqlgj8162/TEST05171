@@ -1,23 +1,84 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using System;
+using System.Linq;
+using UnityEngine.UI;
 
 public class TestAstar : MonoBehaviour
 {
     public int[,] arrMap;
     public int idx;
+    public Button btn;
+    public Button btn2;
 
     private int tempx;
     private int tempy;
-
-    private Tile startTile;
+    private Color defalutColor;
+    private Vector2 targetPos;
+    private Vector2 thisPos;
+    private float angle;
+    private int count;
+    private int count2;
+    private Tile currentParentsNode;
     private Tile endTile;
+    
     List<Tile> tileList;
-
     List<Tile> openList;
-
     List<Tile> closeList;
+       
+    private void Awake()
+    {
+        this.btn2.onClick.AddListener(() =>
+        {
+            foreach(var node in this.openList) //현재 오픈리스트 확인.
+            {
+                print($"{node.pos.x},{node.pos.y}");
+            }
+        });
 
-    void Start()
+        this.btn.onClick.AddListener(() =>
+        {           
+            this.NextStage();
+        });
+    }
+
+    public void NextStage()
+    {
+        
+        var sortList = this.openList.OrderBy(x => x.F);
+        List<Tile> tempList = new List<Tile>();
+        foreach (var node in sortList)
+        {
+            tempList.Add(node);
+        }
+        this.openList = null;
+        this.openList = tempList;
+
+        var firstValue = this.openList[0];
+        print($"{this.openList[0].pos.x},{this.openList[0].pos.y}");
+        this.currentParentsNode.type = 5;
+        firstValue.type = 1;
+        this.closeList.Add(firstValue);
+        this.openList.RemoveAt(0);
+
+        this.currentParentsNode = firstValue;
+        this.TileColorReset();
+        this.currentParentsNode.GetComponent<SpriteRenderer>().color = Color.green;
+        for (int i=0;i<this.openList.Count;i++)
+        {
+            if (this.openList[i] == this.currentParentsNode)
+            {                
+                this.closeList.Add(this.openList[i]);
+                this.openList.RemoveAt(i);
+                break;
+            }
+        }
+        List<Tile> tempTileList = new List<Tile>();
+        this.CheckNode();
+    }
+
+
+    private void Start()
     {
         this.arrMap = new int[7, 5];
         this.tileList = new List<Tile>();
@@ -26,94 +87,96 @@ public class TestAstar : MonoBehaviour
 
         this.CreateMap();
         this.CreateTile();
-        
-        foreach(var tile in this.tileList)
+        this.CheckNode();
+    }
+
+    public void CheckNode()
+    {
+        foreach (var tile in this.tileList)
         {
             for (int i = -1; i <= 1; i++)
             {
                 for (int j = 1; j >= -1; j--)
                 {
-                    if(tile.pos==this.startTile.pos- new Vector2(j,i))
+                    if (tile.pos == this.currentParentsNode.pos - new Vector2(j, i))
                     {
-                        if (this.startTile.pos == tile.pos || tile.type == 3)
+                        if (this.currentParentsNode.pos == tile.pos || tile.type == 3 || tile.type == 1)
                         {
                             this.closeList.Add(tile);
                         }
                         else
                         {
+                            if(tile.type!=1 && tile.type != 5)
                             this.openList.Add(tile);
                         }
+                        tile.parents = this.currentParentsNode;
                     }
                 }
             }
         }
 
-        foreach(var tile in this.openList)
+        foreach (var tile in this.openList)
         {
-            var gDis = Vector2.Distance(this.startTile.pos, tile.pos);
-            var gCsting = (int)(gDis * 10);            
-            GameObject.Find($"{tile.transform.gameObject.name}/PathInfo/TextMeshG").transform.GetComponent<TextMesh>().text = gCsting.ToString();
+            var gDis = Vector2.Distance(this.currentParentsNode.pos, tile.pos);
+            GameObject.Find($"{tile.transform.gameObject.name}/PathInfo/TextMeshG").transform.GetComponent<TextMesh>().text = gDis.ToString("N1");
 
             var hDis = Vector2.Distance(this.endTile.pos, tile.pos);
-            var hCsting = (int)(hDis * 10);
-            GameObject.Find($"{tile.transform.gameObject.name}/PathInfo/TextMeshH").transform.GetComponent<TextMesh>().text = hCsting.ToString();
-                        
-            GameObject.Find($"{tile.transform.gameObject.name}/PathInfo/TextMeshF").transform.GetComponent<TextMesh>().text = (gCsting+hCsting).ToString();
+            GameObject.Find($"{tile.transform.gameObject.name}/PathInfo/TextMeshH").transform.GetComponent<TextMesh>().text = hDis.ToString("N1");
+
+            tile.F = gDis + hDis;
+            GameObject.Find($"{tile.transform.gameObject.name}/PathInfo/TextMeshF").transform.GetComponent<TextMesh>().text = (gDis + hDis).ToString("N1");
             tile.transform.GetComponent<SpriteRenderer>().color = Color.gray;
 
             var dirGO = Instantiate(Resources.Load<GameObject>("dir"));
-            dirGO.transform.SetParent(tile.transform,false);
-            //var screen  = Camera.main.WorldToScreenPoint(this.startTile.transform.position);
-            //print(this.startTile.transform.position);
-            //print(screen);            
-
-
-
-
-
-
-
-            this.targetPos = this.startTile.transform.position;            
+            dirGO.transform.SetParent(tile.transform, false);
+            this.targetPos = this.currentParentsNode.transform.position;
             this.thisPos = dirGO.transform.position;
             targetPos.x = targetPos.x - thisPos.x;
             targetPos.y = targetPos.y - thisPos.y;
             angle = Mathf.Atan2(targetPos.y, targetPos.x) * Mathf.Rad2Deg;
-            dirGO.transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle+90));        
-
-
-
-
-
-
-
-            //Vector3 targetPos = this.startTile.transform.position;
-            //Vector3 targetPosFlattened = new Vector3(targetPos.x, targetPos.y, 0);
-            //dirGO.transform.LookAt(targetPosFlattened);
+            dirGO.transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle + 90));
         }
     }
-    private Vector2 targetPos;
-    private Vector2 thisPos;
-    private float angle;
+    
+    public void TileColorReset()
+    {
+        foreach (var node in this.tileList)
+        {
+            if (node.type == 0 || node.type ==5)
+            {
+                node.transform.GetComponent<SpriteRenderer>().color = this.defalutColor;                
+            }
+            if(node.type ==5)
+            {
+                node.transform.GetComponent<SpriteRenderer>().color = Color.yellow;
+            }
+        }
+        foreach(var node in this.openList)
+        {
+            node.GetComponentInChildren<TextMesh>().text = " ";
+        }
+        var a =GameObject.FindGameObjectsWithTag("dir");
 
-
-
-    private int count;
+        foreach(var obj in a)
+        {
+            Destroy(obj);
+        }        
+    }    
 
     public void CreateTile()
     {
-        
         for (int i = 0; i < 5; i++)
         {
             for (int j = 0; j < 7; j++)
             {
-                var tileId = this.arrMap[j, i];                                
+                var tileId = this.arrMap[j, i];
                 var tileGo = Instantiate(Resources.Load<GameObject>("Tile" + tileId));
-                var pos = Camera.main.ScreenToWorldPoint(new Vector2((tempx * 100) + 512 - 300, (tempy * -100) + 768-200));
+                var pos = Camera.main.ScreenToWorldPoint(new Vector2((tempx * 100) + 512 - 300, (tempy * -100) + 768 - 200));
                 tileGo.AddComponent<Tile>();
                 tileGo.GetComponent<Tile>().pos = new Vector2(j, i);
-                if (tileId ==1)
+                if (tileId == 1)
                 {
-                    this.startTile = tileGo.transform.GetComponent<Tile>();
+                    this.currentParentsNode = tileGo.transform.GetComponent<Tile>();
                 }
                 if (tileId == 2)
                 {
@@ -129,6 +192,14 @@ public class TestAstar : MonoBehaviour
                 {
                     this.tempy++;
                     this.tempx = 0;
+                }
+            }
+            foreach (var node in this.tileList)
+            {
+                if (node.type == 0)
+                {
+                    this.defalutColor = node.GetComponent<SpriteRenderer>().color;
+                    break;
                 }
             }
         }

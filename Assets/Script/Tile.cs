@@ -5,7 +5,9 @@ using UnityEngine;
 public class Tile : MonoBehaviour
 {
     public Vector2 pos;
-    public int type;    
+    public Tile parents;
+    public int type;
+    public float F { get; set; }
 
     private void Update()
     {
